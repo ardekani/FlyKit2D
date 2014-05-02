@@ -18,12 +18,6 @@ FkViewPaintedFlies::FkViewPaintedFlies()
     m_video_orig_output = NULL;
 }
 
-//
-//FkViewPaintedFlies::FkViewPaintedFlies()
-//: m_initialized(0),m_dataFromCamera(NULL), m_state(UNINITIALIZED)
-//{
-//    m_outputFilePtr= NULL;
-//}
 
 FkInt32S FkViewPaintedFlies::readFrame(FkInt32U frameIndex)
 {
@@ -86,7 +80,6 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
     {
         IplImage roiImgIPL;
         cv::Rect roi(m_viewArenas[i]->m_roi);
-//        printf("\ni = %d, %d, %d, %d, %d", i, roi.x,roi.y,roi.width,roi.height);
         roiImgIPL = changeMaskMat(roi);
         m_viewArenas[i]->setChangeMask(&roiImgIPL);
     }
@@ -94,16 +87,7 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
 }
 #endif
 
-
-    //for(int i = 0;i<m_viewArenas.size();i++)
-    //{
-    //    char name[200];
-    //    sprintf(name,"W%d",i);
-    //    cvShowImage(name, m_viewArenas[i]->m_changeMaskIpl);
-
-    //}
-
-    for(int i = 0;i<m_viewArenas.size();i++)
+for(int i = 0;i<m_viewArenas.size();i++)
     {
         FILE_LOG(logDEBUG3)<<"****************************************arena ="<< i<< "*****************************************";
 
@@ -157,7 +141,6 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
             cvPutText(m_currFrameImg,tmp,cvPoint((int)(floor(m_viewArenas[i]->m_currFixedCentroids[j].x + m_viewArenas[i]->m_roi.x)) , 
                                                  (int)(floor(m_viewArenas[i]->m_currFixedCentroids[j].y)+ m_viewArenas[i]->m_roi.y) ) ,&font,cvScalar(255,0,0) );
         }
-
     }
 
     FILE_LOG(logDEBUG1)<<"\nEnd of FkViewPaintedFlies::processFrame";
@@ -189,8 +172,6 @@ FkInt32S FkViewPaintedFlies::init(std::string videoFileName, FkInt32U startFrame
         m_procParam.stopFrame = stopFrame;
     else
         return(FK_ERR_BAD_PROCESSING_PARAM);
-
-    //IplImage* calculatedBGModel
 
     m_currBackGroundModel = NULL;
     if(backgroundModelFileName == "")
@@ -245,8 +226,6 @@ FkInt32S FkViewPaintedFlies::close()
 
     if( m_video_orig_output != NULL)
         cvReleaseVideoWriter(&m_video_orig_output);
-
-	
     return(FK_OK);
 }
 
@@ -315,14 +294,7 @@ FkInt32S FkViewPaintedFlies::show()
     if(m_currChangeMaskImg!=NULL)
         cvShowImage("m_currChangeMaskImg",m_currChangeMaskImg);
 
-    //if(m_pSilhDetect->m_denoisedChangeMask!=NULL)
-    //    cvShowImage("m_pSilhDetect->m_denoisedChangeMask",m_pSilhDetect->m_denoisedChangeMask); 
-
-    //if(m_currBackGroundModel!=NULL)
-    //    cvShowImage("m_currBackGroundModel",m_currBackGroundModel);
-
     cvWaitKey(1);
-
     return(FK_OK);
 }
 
@@ -336,22 +308,18 @@ FkInt32S FkViewPaintedFlies::appendToVideoOutput()
     else
     {
        return(FK_ERR_CAN_NOT_WRITE_VIDEO_OUTPUT);
-
     }
-
 }
 
 
 FkInt32S FkViewPaintedFlies::appendToTextOutput(int frameNum)
 {
-	for (FkInt32U i = 0;i<m_viewArenas.size();i++)
-	{
-		m_viewArenas[i]->appendToTextOutput(frameNum);
-
-	}
+    for (FkInt32U i = 0;i<m_viewArenas.size();i++)
+    {
+        m_viewArenas[i]->appendToTextOutput(frameNum);
+    }
     return(FK_OK);
 }
-
 
 
 FkInt32S    FkViewPaintedFlies::initTextOutput()

@@ -40,8 +40,6 @@ public:
     virtual FkInt32S segmentFrame(IplImage* inp){return(FK_OK);};
     virtual FkInt32S denoiseChangeMask(){return(FK_OK);};
     virtual FkInt32S setBackgroundModel(IplImage* inp){return(FK_OK);};
-    //IplImage* segmentFrame(IplImage *thisFrame);
-    //IplImage* segmentFrame2(IplImage *thisFrame) ;
 };
 
 class FkSilhDetector_PaintedFlies : public FkSilhDetector {

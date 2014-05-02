@@ -87,22 +87,14 @@ int main()
     centers.push_back(cvPoint(0,0));
     radius = 1000;
 
-
-
-
     FILE_LOG(logINFO)<<"video file name ="<< vidName;
     FILE_LOG(logINFO)<<"background file name ="<< backgroundName ;
     FILE_LOG(logINFO)<<"first frame : "<< firstFrame;
     FILE_LOG(logINFO)<<"last frame : "<< lastFrame;
 
     ret = myView->init(vidName,firstFrame,lastFrame,backgroundName);//"CalculatedBG-View2_yellowFly_6well.bmp");
-
     FILE_LOG(logDEBUG)<<"ret from init ="<<ret;
-
     int offset = radius; //(int)(floor( 1.4142f*radius));
-
-
-
 
     for (int i = 0;i<centers.size();i++)
     {
@@ -113,21 +105,12 @@ int main()
         roi.y = max(centers[i].y - offset,0);
         roi.width = min(2*radius,800-roi.x);
         roi.height = min(2*radius,600-roi.y);
-        //std::cout<<"\nsumX = "<<roi.x + roi.width<<std::endl;
-        //std::cout<<"\nsumy = "<<roi.y + roi.height<<std::endl;
 
         pArena->setID(i);
         pArena->setArenaParams(roi,numberOfFliesInEachArena);
         pArena->m_arenaTracker.setTargetNum(3);
         myView->m_viewArenas.push_back(pArena);
     }
-
-
-
-    //for (int i = 0;i<centers.size();i++)
-    //{
-    //    std::cout<<"\n ("<<myView->m_viewArenas[i]->m_roi.x<<","<<myView->m_viewArenas[i]->m_roi.y<<")";
-    //}
 
     myView->initTextOutput();
     clock_t startTime;
