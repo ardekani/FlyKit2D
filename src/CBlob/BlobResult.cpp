@@ -948,11 +948,10 @@ void CBlobResult::PrintBlobs( char *nom_fitxer ) const
 
 //
 void CBlobResult::splitMergedBlobs(CBlobResult &dst,double thresh2, double thresh3) 
-
 {
+    FILE_LOG(logDEBUG1)<<"Begin of splitMergedBlobs";
     int numBlobs = GetNumBlobs();
     CBlob *currentBlob, subCurrentBlob;
-    //	printf("\nnumBlobs = %d",numBlobs);
 
     for (int bc = 0;bc<numBlobs;bc++)
     {
@@ -966,17 +965,10 @@ void CBlobResult::splitMergedBlobs(CBlobResult &dst,double thresh2, double thres
             dst.m_blobs.push_back( new CBlob( GetBlob( bc ) ));
         else
         {
-            //for (size_t sb=0;sb<n;sb++)
-            //	separatedBlobs.push_back(new CBlob());
 
             std::vector<std::vector<CvPoint2D32f>> clusteredPoints;
-
-            //			currentBlob->splitBlob(n, separatedContours, clusteredPoints );
             currentBlob->splitBlob(n, clusteredPoints );
-
-
-            printf("\n*************************************after splitBlob********************************");
-            //printf("\n separatedContour.size() = %d",separatedContours.size());
+            //TODO: very important! change the resolution --- very bad!
             IplImage* tmpForContour = cvCreateImage(cvSize(800,600),8,1);
 
             for (size_t cnt = 0;cnt<clusteredPoints.size();cnt++)//separatedContours.size();cnt++)
@@ -1015,6 +1007,7 @@ void CBlobResult::splitMergedBlobs(CBlobResult &dst,double thresh2, double thres
         }
         m_blobs.erase( m_blobs.begin(), itBlobs );
     }
+    FILE_LOG(logDEBUG1)<<"Begin of splitMergedBlobs";
 }
 
 //
@@ -1123,12 +1116,14 @@ void CBlobResult::splitBlobNthToMSubBlob(CBlobResult &dst,int Nth, int numOfSubB
 
 
 void CBlobResult::splitBlobNthToMSubBlob(CBlobResult &dst,int Nth, int numOfSubBlobs_M) 
-						
 {
+    FILE_LOG(logDEBUG1)<<"begin of CBlobResult::splitBlobNthToMSubBlob";
+
 	int numBlobs = GetNumBlobs();
+    FILE_LOG(logDEBUG3)<<"numBlobs = "<<numBlobs;
 	CBlob *currentBlob, subCurrentBlob;
-	printf("\nnumBlobs = %d",numBlobs);
-	printf("\nsplitBlobNthToMSubBlob");
+//	printf("\nnumBlobs = %d",numBlobs);
+//	printf("\nsplitBlobNthToMSubBlob");
 	for (int bc = 0;bc<numBlobs;bc++)
 	{
 		//printf("\nbc = %d",bc);
@@ -1150,7 +1145,7 @@ void CBlobResult::splitBlobNthToMSubBlob(CBlobResult &dst,int Nth, int numOfSubB
 			currentBlob->splitBlob(numOfSubBlobs_M, clusteredPoints );
 
 
-			printf("\n*************************************after splitBlob********************************");
+//			printf("\n*************************************after splitBlob********************************");
 			//printf("\n separatedContour.size() = %d",separatedContours.size());
 			IplImage* tmpForContour = cvCreateImage(cvSize(800,600),8,1);
 
@@ -1189,6 +1184,9 @@ void CBlobResult::splitBlobNthToMSubBlob(CBlobResult &dst,int Nth, int numOfSubB
 		}
 		m_blobs.erase( m_blobs.begin(), itBlobs );
 	}
+
+        FILE_LOG(logDEBUG1)<<"end of CBlobResult::splitBlobNthToMSubBlob";
+
 }
 
 

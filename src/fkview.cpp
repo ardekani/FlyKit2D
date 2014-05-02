@@ -1,5 +1,6 @@
 #include "fkview.h"
 #include <iostream>
+#include "log.h"
 //FkViewPaintedFlies Class
 #define __USE_OPENMP 0
 #define _YELLOW_FLY 1
@@ -24,8 +25,6 @@ FkViewPaintedFlies::FkViewPaintedFlies()
 //    m_outputFilePtr= NULL;
 //}
 
-
-
 FkInt32S FkViewPaintedFlies::readFrame(FkInt32U frameIndex)
 {
     if(m_isOpen == false) // Cannot grab if view is not open
@@ -48,11 +47,11 @@ FkInt32S FkViewPaintedFlies::readFrame(FkInt32U frameIndex)
     m_currFrameImg = cvCloneImage(temp); // Copy the temp image to currFrame
     m_procParam.currentFrameNumber = frameIndex;
     return (FK_OK);
-
 }
 
 FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
 {
+    FILE_LOG(logDEBUG1)<<"\nStart FkViewPaintedFlies::processFrame";
     readFrame(frameNumber);
     m_pSilhDetect->segmentFrame(m_currFrameImg);
     m_pSilhDetect->denoiseChangeMask();
@@ -65,6 +64,8 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
 
     CBlobResult blobs;
     CBlob *currentBlob;
+
+
     blobs = CBlobResult( m_currChangeMaskImg, NULL, 0 );
     cv::Mat changeMaskMat(m_pSilhDetect->m_denoisedChangeMask);
     int i;
@@ -104,23 +105,19 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
 
     for(int i = 0;i<m_viewArenas.size();i++)
     {
-        printf("\n********************************************************************************************",i);
-        printf("\n****************************************arena = %d *****************************************",i);
-        printf("\n********************************************************************************************",i);
+        FILE_LOG(logDEBUG3)<<"****************************************arena ="<< i<< "*****************************************";
 
-        std::cout<<"m_viewArenas[i]->findBlobs();"<<std::endl;
+        FILE_LOG(logDEBUG3)<<"m_viewArenas[i]->findBlobs()";
         m_viewArenas[i]->findBlobs();
-        std::cout<<"m_viewArenas[i]->fixBlobs();"<<std::endl;
+        FILE_LOG(logDEBUG3)<<"m_viewArenas[i]->fixBlobs()";
+
         m_viewArenas[i]->fixBlobsAndReturnGoodBlobs();
-        std::cout<<"m_viewArenas[i]->track;"<<std::endl;
+        FILE_LOG(logDEBUG3)<<"m_viewArenas[i]->track;";
         FkInt32S ret =  m_viewArenas[i]->track();
-
-
 
 #if _YELLOW_FLY
         //find the yellow fly
 
-        //std::vector<int>grayLevels;
         int maxGrayLevel = -1;
         int yellowFlyIndex = -1;
         for (int yc = 0;yc<m_viewArenas[i]->m_currFixedCentroids.size();yc++)
@@ -135,19 +132,13 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
             }
         }
 
-
 #endif
 
-
-
-        std::cout<<"draw Numbers "<<std::endl;
         for (int j = 0;j<m_viewArenas[i]->m_currFixedCentroids.size();j++)
         {
             CBlob* currBlob = m_viewArenas[i]->m_fixedListOfBlobs.GetBlob(j);
-//            int meanGray = (int)currBlob->Mean(m_currFrameImg,currBlob->getIDNumber(),m_viewArenas[i]->m_roi.x, m_viewArenas[i]->m_roi.y);
 
             char tmp[10];
-            //std::cout<<"currBlob->getIDNumber() = " << currBlob->getIDNumber()<<std::endl;
 
 #if _YELLOW_FLY 
             if ((maxGrayLevel != -1) && (yellowFlyIndex != -1) && (j==yellowFlyIndex))
@@ -168,6 +159,8 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
         }
 
     }
+
+    FILE_LOG(logDEBUG1)<<"\nEnd of FkViewPaintedFlies::processFrame";
     return(FK_OK);
 }
 
@@ -363,18 +356,16 @@ FkInt32S FkViewPaintedFlies::appendToTextOutput(int frameNum)
 
 FkInt32S    FkViewPaintedFlies::initTextOutput()
 {
-	for (FkInt32U i = 0;i<m_viewArenas.size();i++)
-	{
-		std::string fn = m_procParam.inputFileName;
-		fn = fn.substr(0,fn.length()-4);
-		char tmp[100];
-		sprintf(tmp,"_arena%.2d.csv",i);
-		fn+=tmp;
-		m_viewArenas[i]->initTextOutput(fn);
-
-	}
-
-
-
+    FILE_LOG(logDEBUG1)<<"\nStart initTextOutput";
+    for (FkInt32U i = 0;i<m_viewArenas.size();i++)
+    {
+        std::string fn = m_procParam.inputFileName;
+        fn = fn.substr(0,fn.length()-4);
+        char tmp[100];
+        sprintf(tmp,"_arena%.2d.csv",i);
+        fn+=tmp;
+        m_viewArenas[i]->initTextOutput(fn);
+    }
+    FILE_LOG(logDEBUG1)<<"\nEnd of initTextOutput";
     return(FK_OK);
 }

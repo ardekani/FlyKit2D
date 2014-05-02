@@ -20,7 +20,7 @@ MODIFICATIONS (Modification, Author, Date):
 
 #include "cxcore.h"
 #include "highgui.h"
-
+#include "..\log.h"
 
 
 //#include "BlobLibraryConfiguration.h"

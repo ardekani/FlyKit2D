@@ -23,7 +23,7 @@ MODIFICATIONS (Modification, Author, Date):
 #include <math.h>
 #include "cxcore.h"
 #include "highgui.h"
-
+#include "..\log.h"
 //#ifdef MATRIXCV_ACTIU
 //	#include "matrixCV.h"
 //#else

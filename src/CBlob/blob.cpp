@@ -1073,10 +1073,20 @@ bool CBlob::returnBlobsCentroids(CvPoint2D64f &center)
 
 bool CBlob::splitBlob(int numCluster, std::vector<std::vector<CvPoint2D32f>> &clusteredPoint)// std::vector<CvSeq*>& clusteredContours, std::vector<std::vector<CvPoint2D32f>> &clusteredPoint)
 {
-	printf("\nI'm at splitBlob");
-    std::cout<<"\narea = "<<this->Area();
+    FILE_LOG(logDEBUG1)<<"begin of CBlob::splitBlob";
+    //populate the m_externalContour list..
+    this->m_externalContour.GetContourPoints();
+    FILE_LOG(logDEBUG3)<<"area = "<<this->Area();
+
 	CvSeq* contour;
+    if (m_externalContour.IsEmpty())
+    {
+        FILE_LOG(logDEBUG3)<<"m_externalContour IsEmpty() - nothing to split ";
+        return false; //TODO -- change the return values, make sure the return value for split fuction is getting checked somewhere!
+    }
+
 	contour = m_externalContour.m_contourPoints;
+    FILE_LOG(logDEBUG3)<<"contour->total = "<<contour->total;
 	std::vector <CvPoint2D32f> contourkmResults;
 
 	clusteredPoint.clear(); // just to make sure there is nothing in this vector
@@ -1168,7 +1178,9 @@ bool CBlob::splitBlob(int numCluster, std::vector<std::vector<CvPoint2D32f>> &cl
 		{
 			tmp.x = (float)centroids[2*i];
 			tmp.y = (float)centroids[2*i + 1];
-			printf("\ntemp.x = %.2lf, tmp.y = %.2lf",tmp.x, tmp.y);
+            char msg[100];
+			sprintf(msg,"\ntemp.x = %.2lf, tmp.y = %.2lf",tmp.x, tmp.y);
+            FILE_LOG(logDEBUG3)<<msg;
 			tmpbool=tmpbool&&(cvPointPolygonTest(contour, tmp,false)>0); //if both points are inside of the contour then stop trying kmeans again
 		}
 		if(tmpbool)
@@ -1181,7 +1193,8 @@ bool CBlob::splitBlob(int numCluster, std::vector<std::vector<CvPoint2D32f>> &cl
 	cvReleaseMat(&allThePoints);
 	cvReleaseMat(&clusters);
 
-	printf("\nEnd of separatedBlob");
+    FILE_LOG(logDEBUG1)<<"end of CBlob::splitBlob";;
+	//printf("\nEnd of separatedBlob");
 
 return true;
 }

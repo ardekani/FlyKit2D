@@ -10,6 +10,7 @@
 #include "fkTracker.h"
 #include <iostream>
 #include <fstream>
+#include "log.h"
 class FkArena_base{
 public:
     FkArena_base()
@@ -73,41 +74,43 @@ public:
     ~FkArea_PaintedFlies(){};
     FkInt32S track()
     {
-        std::cout<<"\nIn arean track-- begin ";
+        FILE_LOG(logDEBUG1)<<"begin of arena track";
+        //std::cout<<"\nIn arean track-- begin ";
         m_arenaTracker.getNewMeasurement(m_currFixedCentroids);
 
         if(m_lastTrackIndex2D.size()==0)
         {
-            std::cout<<"\n        if(m_lastTrackIndex2D.size()==0)";
-            std::cout<< "\nm_currFixedCentroids.size() = "<<m_currFixedCentroids.size();
+            //std::cout<<"\n        if(m_lastTrackIndex2D.size()==0)";
+            //std::cout<< "\nm_currFixedCentroids.size() = "<<m_currFixedCentroids.size();
             for(int i=0;i<m_currFixedCentroids.size();i++) 
                 m_lastTrackIndex2D.push_back(i);
         }
-        std::cout<<"\nBeforeTrack ";
+        FILE_LOG(logDEBUG3)<<"\n m_arenaTracker.Track";
         m_arenaTracker.Track(m_lastTrackIndex2D);
-        std::cout<<"\\nAfterTrack ";
+        FILE_LOG(logDEBUG3)<<"\n m_arenaTracker.Track";
         m_lastTrackIndex2D = m_arenaTracker.assignmentVec; // read back tracks
 
         // assign ID's to blobs after tracking
 
         if(m_lastTrackIndex2D.size() == m_fixedListOfBlobs.GetNumBlobs())
         {
-            printf("\n in :         if(m_lastTrackIndex2D.size() == m_fixedListOfBlobs.GetNumBlobs())");
+            FILE_LOG(logDEBUG3)<<"in : if(m_lastTrackIndex2D.size() == m_fixedListOfBlobs.GetNumBlobs())";
             CBlob *currBlob;
 
-            printf("\n m_fixedListOfBlobs.GetNumBlobs() = %d",m_fixedListOfBlobs.GetNumBlobs());
+            FILE_LOG(logDEBUG3)<<"\n m_fixedListOfBlobs.GetNumBlobs() = %d"<<m_fixedListOfBlobs.GetNumBlobs();
             //m_fixedListOfBlobs.GetNumBlobs()
 
             for (int i = 0;i<m_fixedListOfBlobs.GetNumBlobs();i++)
             {
                 currBlob = m_fixedListOfBlobs.GetBlob(i);
                 currBlob->setIDNumber(m_lastTrackIndex2D[i]);
-                printf("\nIn the loopp i = %d",i);
+                //printf("\nIn the loopp i = %d",i);
 
             }
 
         }
 
+        FILE_LOG(logDEBUG1)<<"end of arena track";
         return(FK_OK);
     };
 
@@ -124,20 +127,23 @@ public:
     }
 
     FkInt32S findBlobs(){
+        FILE_LOG(logDEBUG1)<<"Start of findBlobs()";
         m_origListOfBlobs = CBlobResult(m_changeMaskIpl,NULL, 0);
+        FILE_LOG(logDEBUG1)<<"End of findBlobs()";
         return(FK_OK);
     }; 
 
     FkInt32S fixBlobsAndReturnGoodBlobs()
     {
-        std::cout<<"beginning"<<std::endl;
+        FILE_LOG(logDEBUG1)<<"Start of fixBlobsAndReturnGoodBlobs";
+        //std::cout<<"beginning"<<std::endl;
         //equal measurement
         if ( (FkInt32S) m_origListOfBlobs.GetNumBlobs() == m_numOfTargets) //if the number of detected blobs is same as the number of flies.. don't do any thing
         {
             m_fixedListOfBlobs = m_origListOfBlobs;
         }
 
-        std::cout<<"middle1"<<std::endl;
+        //std::cout<<"middle1"<<std::endl;
 
 
         //more measurement, some blobs should be eliminated 
@@ -172,7 +178,7 @@ public:
                     FkReal32F minArea =99999.0;
                     FkInt32S smallestBlobID = -1;
 
-                    std::cout<<"\n------------before deleting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
+//                    std::cout<<"\n------------before deleting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
                     for (int i = 0;i<m_fixedListOfBlobs.GetNumBlobs();i++)
                     {
                         CBlob* currBlob = m_origListOfBlobs.GetBlob(i);
@@ -183,19 +189,19 @@ public:
                         }
                     }
                     m_fixedListOfBlobs.removeNthBlob(smallestBlobID);
-                    std::cout<<"\n------------after deleting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
+//                    std::cout<<"\n------------after deleting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
             }
             assert((FkInt32S) m_fixedListOfBlobs.GetNumBlobs() == m_numOfTargets);
 #endif
             }
 
 
-    std::cout<<"middle2"<<std::endl;
+    //std::cout<<"middle2"<<std::endl;
 
     // less measurements
     if ( (FkInt32S) m_origListOfBlobs.GetNumBlobs()< m_numOfTargets) //if the number of detected blobs is same as the number of flies.. don't do any thing
     {
-        std::cout<<"middle2.1"<<std::endl;
+ //       std::cout<<"middle2.1"<<std::endl;
 #if __USE_PREVIOUS_MEASUREMENT_TO_FIX
         if (m_prevDetectedBlobs.size()< 1) //no previous info -- just return the originals
         {
@@ -220,9 +226,11 @@ public:
             FkReal32F maxArea = -1;
             FkInt32S biggerBlobID = -1;
             FkInt32S numOfMissing = m_numOfTargets - m_origListOfBlobs.GetNumBlobs();
-            std::cout<<"\nnumOfMissing = " << numOfMissing <<std::endl;
+            FILE_LOG(logDEBUG3)<<"numOfMissing = "<<numOfMissing;
+            //std::cout<<"\nnumOfMissing = " << numOfMissing <<std::endl;
             m_fixedListOfBlobs = m_origListOfBlobs;
-            std::cout<<"\n------------before spliting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
+            FILE_LOG(logDEBUG3)<<"before Splitting num of blobs are"<<m_fixedListOfBlobs.GetNumBlobs();
+            //std::cout<<"\n------------before spliting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
             for (int i = 0;i<m_fixedListOfBlobs.GetNumBlobs();i++)
             {
                 CBlob* currBlob = m_origListOfBlobs.GetBlob(i);
@@ -234,7 +242,8 @@ public:
             }
             //a simple logic, just split the bigger blob 
             m_fixedListOfBlobs.splitBlobNthToMSubBlob(m_fixedListOfBlobs,biggerBlobID,numOfMissing+1);
-            std::cout<<"\n------------after spliting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
+            //std::cout<<"\n------------after spliting ------------ = " << m_fixedListOfBlobs.GetNumBlobs() <<std::endl;
+            FILE_LOG(logDEBUG3)<<"after Splitting num of blobs are"<<m_fixedListOfBlobs.GetNumBlobs();
             
             //for (size_t ss = 0;ss<m_fixedListOfBlobs.GetNumBlobs();ss++)
             //{
@@ -255,7 +264,7 @@ public:
     if(m_prevDetectedBlobs.size()>3) //TODO: write this more efficient
         m_prevDetectedBlobs.erase(m_prevDetectedBlobs.begin(),m_prevDetectedBlobs.begin()+1);
 
-    std::cout<< "\n---after deleting it is : " << m_prevDetectedBlobs.size();
+    //std::cout<< "\n---after deleting it is : " << m_prevDetectedBlobs.size();
     CBlob *currentBlob;
     m_currFixedCentroids.clear();
 
@@ -265,11 +274,12 @@ public:
         CvPoint2D64f cntr;
         currentBlob->returnBlobsCentroids(cntr);
         m_currFixedCentroids.push_back(cntr);
-        std::cout<<"\n   i == "<< i<<"("<<cntr.x<<","<<cntr.y<<")"<<std::endl;
+        //std::cout<<"\n   i == "<< i<<"("<<cntr.x<<","<<cntr.y<<")"<<std::endl;
 
     }
 
-    std::cout<<"end"<<std::endl;
+    FILE_LOG(logDEBUG1)<<"End of fixBlobsAndReturnGoodBlobs";
+    //std::cout<<"end"<<std::endl;
     return(FK_OK);
 
 
@@ -279,21 +289,22 @@ public:
 
 FkInt32U returnLastValidMeasurementIndx()
 {
+    FILE_LOG(logDEBUG1)<<"begin of returnLastValidMeasurementIndx";
     FkInt32U indxOfMostRecentValidMeasurement = -1;
 
-    std::cout<<"\nm_prevDetectedBlobs.size()  =  "<<m_prevDetectedBlobs.size()<<std::endl;
+    //std::cout<<"\nm_prevDetectedBlobs.size()  =  "<<m_prevDetectedBlobs.size()<<std::endl;
 
     int sizeOfPrevBlobs = (int)m_prevDetectedBlobs.size();
 
     for (int i = sizeOfPrevBlobs - 1;i>=0;i--)
     {
-        std::cout<<"\n i = "<<i<<std::endl;
         if (m_prevDetectedBlobs[i].GetNumBlobs() == m_numOfTargets)
         {
             indxOfMostRecentValidMeasurement = i;
             break;
         }
     }
+        FILE_LOG(logDEBUG1)<<"end of returnLastValidMeasurementIndx";
     return (indxOfMostRecentValidMeasurement);
 
 }

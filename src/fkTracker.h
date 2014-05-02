@@ -11,6 +11,7 @@
 #include "cxcore.h"
 #include "highgui.h"
 #include "fkTypes.h"
+#include "log.h"
 #define Point3D CvPoint3D64f /// Redefinition of CvPoint3D64f to a more human readable name
 #define Point2D CvPoint2D64f /// Redefinition of CvPoint2D64f to a more human readable name
 
