@@ -198,6 +198,16 @@ IplImage* blobOrigImage;
         return(m_IDnumber);
     }
 
+
+     void setSex(char inp)
+    {
+        m_sex = inp;
+    }
+    char getSex()
+    {
+        return(m_sex);
+    }
+
 private:
 
 	//! Deallocates all contours
@@ -238,6 +248,7 @@ private:
 	CvSize m_originalImageSize;
     //Ardekani added
     int m_IDnumber; // for tracking;
+    char m_sex; // for fly tracking 'M'ale, 'F'emale, 'U'nknown
 
 
 

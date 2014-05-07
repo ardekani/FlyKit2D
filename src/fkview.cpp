@@ -4,7 +4,7 @@
 //FkViewPaintedFlies Class
 #define __USE_OPENMP 0
 #define _YELLOW_FLY 1
-
+#define __SAVE_BLOB_IMAGES 0
 #if __USE_OPENMP
 #include <omp.h>
 #endif
@@ -21,8 +21,12 @@ FkViewPaintedFlies::FkViewPaintedFlies()
 
 FkInt32S FkViewPaintedFlies::readFrame(FkInt32U frameIndex)
 {
+    FILE_LOG(logDEBUG1) << "begin of FkViewPaintedFlies::readFrame";
     if(m_isOpen == false) // Cannot grab if view is not open
+    {
+        FILE_LOG(logDEBUG1) << "FK_ERR_VIEW_IS_NOT_OPEN";
         return (FK_ERR_VIEW_IS_NOT_OPEN);
+    }
 
     if(m_currFrameImg!=NULL) // Relese currFrame, if some frame has been previously grabbed.
         cvReleaseImage(&m_currFrameImg);
@@ -45,9 +49,21 @@ FkInt32S FkViewPaintedFlies::readFrame(FkInt32U frameIndex)
 
 FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
 {
-    FILE_LOG(logDEBUG1)<<"\nStart FkViewPaintedFlies::processFrame";
-    readFrame(frameNumber);
-    m_pSilhDetect->segmentFrame(m_currFrameImg);
+    FILE_LOG(logDEBUG1)<<"Start FkViewPaintedFlies::processFrame";
+    int ret;
+    ret = readFrame(frameNumber);
+    if(FK_OK!=ret)
+    {
+        FILE_LOG(logERROR)<<"return error from readFrame : "<<ret;
+        return(ret);
+    }
+    ret = m_pSilhDetect->segmentFrame(m_currFrameImg);
+    if(FK_OK!=ret)
+    {
+        FILE_LOG(logERROR)<<"return error from m_pSilhDetect->segmentFrame : "<<ret;
+        return(ret);
+    }
+
     m_pSilhDetect->denoiseChangeMask();
 
     if(m_currChangeMaskImg!=NULL)
@@ -87,6 +103,12 @@ FkInt32S FkViewPaintedFlies::processFrame(FkInt32U frameNumber)
 }
 #endif
 
+
+
+
+
+
+
 for(int i = 0;i<m_viewArenas.size();i++)
     {
         FILE_LOG(logDEBUG3)<<"****************************************arena ="<< i<< "*****************************************";
@@ -100,15 +122,31 @@ for(int i = 0;i<m_viewArenas.size();i++)
         FkInt32S ret =  m_viewArenas[i]->track();
 
 #if _YELLOW_FLY
-        //find the yellow fly
+// create a maskedframe image
+        CvSize sz = cvSize(m_currFrameImg->width, m_currFrameImg->height);	
+        IplImage* refImg = cvCreateImage(sz, m_currFrameImg->depth, m_currFrameImg->nChannels);
+        cvZero(refImg);
+        IplImage* maskedFrame = cvCloneImage(refImg);
+        cvOr(m_currFrameImg, refImg, maskedFrame, m_currChangeMaskImg);
+        cvReleaseImage(&refImg);
 
+        //find the yellow fly
         int maxGrayLevel = -1;
         int yellowFlyIndex = -1;
         for (int yc = 0;yc<m_viewArenas[i]->m_currFixedCentroids.size();yc++)
         {
             CBlob* currBlob2 = m_viewArenas[i]->m_fixedListOfBlobs.GetBlob(yc);
+
+#if __SAVE_BLOB_IMAGES
+        //m_viewArenas[i]->m_fixedListOfBlobs.setBlobsOrigImage(maskedFrame);
+        m_viewArenas[i]->m_fixedListOfBlobs.setBlobsOrigImage(m_currFrameImg);
+        char fn[1000];
+        sprintf(fn,"E:\\sampleVid\\m_viewArenas_%d_blobID_%d_frameNumber_%d.bmp",i,yc,frameNumber);
+        currBlob2->saveBlobImg(fn);
+#endif
             int meanGray = (int)currBlob2->Mean(m_currFrameImg,currBlob2->getIDNumber(),m_viewArenas[i]->m_roi.x, m_viewArenas[i]->m_roi.y);
-//            grayLevels.push_back(meanGray);
+//            int meanGray = (int)currBlob2->Mean(maskedFrame,currBlob2->getIDNumber(),m_viewArenas[i]->m_roi.x, m_viewArenas[i]->m_roi.y);
+            //            grayLevels.push_back(meanGray);
             if(meanGray>maxGrayLevel)
             {
                 maxGrayLevel = meanGray;
@@ -116,26 +154,30 @@ for(int i = 0;i<m_viewArenas.size();i++)
             }
         }
 
+        cvReleaseImage(&maskedFrame);
 #endif
 
         for (int j = 0;j<m_viewArenas[i]->m_currFixedCentroids.size();j++)
         {
             CBlob* currBlob = m_viewArenas[i]->m_fixedListOfBlobs.GetBlob(j);
 
-            char tmp[10];
-
+            char tmp[100];
+            currBlob->setSex('u');
 #if _YELLOW_FLY 
             if ((maxGrayLevel != -1) && (yellowFlyIndex != -1) && (j==yellowFlyIndex))
-                sprintf(tmp,"%c",'f');
+            {
+                currBlob->setSex('f');
+            }
             else
-                sprintf(tmp,"%c",'m');
-
-#else
-            if (ret == FK_OK)
-                sprintf(tmp,"%d , %d",currBlob->getIDNumber(),100);//meanGray);
-            else
-                sprintf(tmp,"%d",-1);
+            {
+                currBlob->setSex('m');
+            }
 #endif
+            if (ret == FK_OK)
+                sprintf(tmp,"%c%d",currBlob->getSex(),currBlob->getIDNumber());
+            else
+                sprintf(tmp,"%c%d",currBlob->getSex(),-1);
+
             CvFont font;
             cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX,0.5,0.5,0,2,8);
             cvPutText(m_currFrameImg,tmp,cvPoint((int)(floor(m_viewArenas[i]->m_currFixedCentroids[j].x + m_viewArenas[i]->m_roi.x)) , 
@@ -143,12 +185,14 @@ for(int i = 0;i<m_viewArenas.size();i++)
         }
     }
 
-    FILE_LOG(logDEBUG1)<<"\nEnd of FkViewPaintedFlies::processFrame";
+    FILE_LOG(logDEBUG1)<<"End of FkViewPaintedFlies::processFrame";
     return(FK_OK);
 }
 
 FkInt32S FkViewPaintedFlies::init(std::string videoFileName, FkInt32U startFrame, FkInt32U stopFrame, std::string backgroundModelFileName)
 {
+    FILE_LOG(logDEBUG1)<<"begin of FkViewPaintedFlies::init";
+
     m_procParam.inputFileName = videoFileName;
     FkInt32S ret = this->open(); // try to open the video file first
     if( ret!=FK_OK)
@@ -166,7 +210,11 @@ FkInt32S FkViewPaintedFlies::init(std::string videoFileName, FkInt32U startFrame
     if(  (startFrame>=0) && (startFrame<m_procParam.totalNumofFrames)     )
         m_procParam.startFrame = startFrame;
     else
+    {
+        FILE_LOG(logERROR)<<"error in FkViewPaintedFlies::init: FK_ERR_BAD_PROCESSING_PARAM, start and stop frame numbers are not correct";
         return(FK_ERR_BAD_PROCESSING_PARAM);
+
+    }
 
     if((stopFrame>startFrame) && (stopFrame<=m_procParam.totalNumofFrames))
         m_procParam.stopFrame = stopFrame;
@@ -180,7 +228,10 @@ FkInt32S FkViewPaintedFlies::init(std::string videoFileName, FkInt32U startFrame
     {
         m_currBackGroundModel = cvLoadImage(backgroundModelFileName.c_str());
         if (m_currBackGroundModel==NULL)
+        {
+            FILE_LOG(logERROR)<<"error in FkViewPaintedFlies::init: FK_ERR_BACKGROUND_FILE_CAN_NOT_BE_LOADED";
             return(FK_ERR_BACKGROUND_FILE_CAN_NOT_BE_LOADED);
+        }
     }
     //TODO: come back to this and fix this
     m_pSilhDetect = /*(FkSilhDetector*)*/   new FkSilhDetector_PaintedFlies;
@@ -192,20 +243,26 @@ FkInt32S FkViewPaintedFlies::init(std::string videoFileName, FkInt32U startFrame
 
     m_video_orig_output = cvCreateVideoWriter(videoOutName.c_str(),-1,/*CV_FOURCC('F', 'F', 'D', 'S'),*/60.0,cvSize(m_procParam.frameWidth,m_procParam.frameHeight));
 
-
+    FILE_LOG(logDEBUG1)<<"begin of FkViewPaintedFlies::init";
     return(FK_OK);
 }
 
 
 FkInt32S FkViewPaintedFlies::open()
 {
+    FILE_LOG(logDEBUG1)<<"begin of FkViewPaintedFlies::open() --openning the video";
     m_videoCapture = NULL;
     m_videoCapture=cvCreateFileCapture(m_procParam.inputFileName.c_str());
     if(m_videoCapture == NULL)
+    {
+        m_isOpen = 0; //just to make sure it is zero
+        FILE_LOG(logERROR)<<"error in opening the video: FK_ERR_CAN_NOT_OPEN_VIDEO_FILE";
         return(FK_ERR_CAN_NOT_OPEN_VIDEO_FILE);
+    }
     else
     {
         m_isOpen = 1;
+        FILE_LOG(logDEBUG1)<<"end of FkViewPaintedFlies::open() --openning the video";
         return(FK_OK);
     }
 }

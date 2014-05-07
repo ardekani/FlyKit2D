@@ -49,10 +49,12 @@ CBlob::CBlob()
 	m_id = -1;
 	blobOrigImage = NULL;
     m_IDnumber = -1;
+    m_sex = 'U';
 }
 CBlob::CBlob( t_labelType id, CvPoint startPoint, CvSize originalImageSize )
 {
     m_IDnumber = -1;
+    m_sex = 'U';
 	m_id = id;
 	m_area = m_perimeter = -1;
 	m_externPerimeter = m_meanGray = m_stdDevGray = -1;
@@ -97,7 +99,7 @@ void CBlob::setBlobContour(CvSeq *inContour, int ID)
 	m_id = ID;
 
     m_IDnumber = -1;
-
+    m_sex = 'U';
 
 
 		//if( source.m_contourPoints )

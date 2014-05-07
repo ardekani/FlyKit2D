@@ -7,8 +7,8 @@
 
 int radius = 130; // for 6 well videos
 int numberOfFliesInEachArena = 3;
-int firstFrame = 65860;
-int lastFrame = firstFrame + 600;//13900;
+int firstFrame = 0;
+int lastFrame = 54000;//firstFrame + 1000;//13900;
 
 int main()
 {
@@ -80,12 +80,12 @@ int main()
 
     
     //running it for one area video 
-    vidName = "E:\\sampleVid\\AviFileChunk0_View0.avi";
-    backgroundName = "E:\\sampleVid\\CalculatedBG.bmp";
-    //these values makes the roi to be the whole image.
-    centers.clear();
-    centers.push_back(cvPoint(0,0));
-    radius = 1000;
+    //vidName = "E:\\sampleVid\\AviFileChunk0_View0.avi";
+    //backgroundName = "E:\\sampleVid\\CalculatedBG.bmp";
+    ////these values makes the roi to be the whole image.
+    //centers.clear();
+    //centers.push_back(cvPoint(0,0));
+    //radius = 1000;
 
     FILE_LOG(logINFO)<<"video file name ="<< vidName;
     FILE_LOG(logINFO)<<"background file name ="<< backgroundName ;
@@ -94,6 +94,11 @@ int main()
 
     ret = myView->init(vidName,firstFrame,lastFrame,backgroundName);//"CalculatedBG-View2_yellowFly_6well.bmp");
     FILE_LOG(logDEBUG)<<"ret from init ="<<ret;
+    if (ret !=FK_OK)
+    {
+        printf("\nCan not initialize this, the problem is either video file or background file (if any)");
+        //return -1;
+    }
     int offset = radius; //(int)(floor( 1.4142f*radius));
 
     for (int i = 0;i<centers.size();i++)
@@ -118,7 +123,12 @@ int main()
     for (int i = firstFrame;i<lastFrame;i+=1)
     {
         ret = myView->processFrame(i);
-        myView->show();
+        if (ret!=FK_OK)
+        {
+            printf("\nCan not process the frame %d",i);
+            break;
+        }
+        //myView->show();
         myView->appendToVideoOutput();
         myView->appendToTextOutput(i);
         FILE_LOG(logDEBUG) << "\nFrame: "<<i;

@@ -1,5 +1,6 @@
 #include "fkSilhDetector.h"
 #include "fkTypes.h"
+#include "log.h"
 #define __USE_OPENMP_FOR_SEGMENTATION 1 // It messes up the background subtraction! TODO: get back to this..
 
 #define PIXEL(img, i, j, k)		*((img)->imageData + (img)->widthStep * (i) + (img)->nChannels * (j) + (k))
@@ -59,10 +60,14 @@ FkInt32S FkSilhDetector_PaintedFlies::setBackgroundModel(IplImage* inp)
 
 
 FkInt32S FkSilhDetector_PaintedFlies::segmentFrame(const IplImage *thisFrame) // I want to keep it void
-{	
-    if(m_isInited!=1)
-        return(FK_ERR_SILH_DETECT_IS_NOT_INIT);
+{
+    FILE_LOG(logDEBUG1)<< "\nbegin of FkSilhDetector_PaintedFlies::segmentFrame";
 
+    if(m_isInited!=1)
+    {
+        FILE_LOG(logDEBUG1)<< "\nsilhDetector is not init";
+        return(FK_ERR_SILH_DETECT_IS_NOT_INIT);
+    }
     CvPoint pt1, pt2; //this is for ROI, TODO: get this exposed 
     pt1 = cvPoint(1,1);
     pt2 = cvPoint(thisFrame->width, thisFrame->height); //setting ROI the whole image
@@ -105,7 +110,7 @@ FkInt32S FkSilhDetector_PaintedFlies::segmentFrame(const IplImage *thisFrame) //
 #endif
 
 
-
+    FILE_LOG(logDEBUG1)<< "\nEnd of FkSilhDetector_PaintedFlies::segmentFrame";
     return (FK_OK);
 }
 

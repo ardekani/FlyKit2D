@@ -22,7 +22,7 @@ public:
     CBlobResult m_fixedListOfBlobs;
     FkInt32S m_ID;          // ID of the arena
     FkInt32S m_numOfTargets; // number of flies in arena
-	std::ofstream m_OutputText;
+    std::ofstream m_OutputText;
     //cv::Mat m_changeMaskMat; 
     FkTracker m_arenaTracker;
     std::vector<int> m_lastTrackIndex2D; 
@@ -168,13 +168,10 @@ public:
 #else
             // remove all but the most m_numOfTargets biggest blobs
 
-
-
             m_fixedListOfBlobs = m_origListOfBlobs;
 
             while ( (FkInt32S) m_fixedListOfBlobs.GetNumBlobs()> m_numOfTargets )
             {
-
                     FkReal32F minArea =99999.0;
                     FkInt32S smallestBlobID = -1;
 
@@ -194,7 +191,6 @@ public:
             assert((FkInt32S) m_fixedListOfBlobs.GetNumBlobs() == m_numOfTargets);
 #endif
             }
-
 
     //std::cout<<"middle2"<<std::endl;
 
@@ -318,9 +314,9 @@ FkInt32S initTextOutput(std::string fileName)
 	m_OutputText.open(fileName.c_str());
 m_OutputText<<"FrameNumber,";
 	for (int i = 0;i<m_numOfTargets-1;i++) //writing the header
-		m_OutputText<<"ID"<<i<<",x"<<i<<",y"<<i<<",";
+		m_OutputText<<"ID"<<i<<"sex"<<i<<",x"<<i<<",y"<<i<<",";
 
-	m_OutputText<<"ID"<<m_numOfTargets-1<<",x"<<m_numOfTargets-1<<",y"<<m_numOfTargets-1<<std::endl;
+	m_OutputText<<"ID"<<m_numOfTargets-1<<"sex"<<m_numOfTargets-1<<",x"<<m_numOfTargets-1<<",y"<<m_numOfTargets-1<<std::endl;
 	return(FK_OK);
 
 	
@@ -330,19 +326,19 @@ m_OutputText<<"FrameNumber,";
 
 FkInt32S appendToTextOutput(FkInt32S frameNumber)
 {
-	m_OutputText<<frameNumber<<",";
-	if(!m_OutputText.is_open())
-		return(FK_ERR_ARENA_CAN_NOT_APPEND_TO_TEXT_OUTPUT);
+    m_OutputText<<frameNumber<<",";
+    if(!m_OutputText.is_open())
+        return(FK_ERR_ARENA_CAN_NOT_APPEND_TO_TEXT_OUTPUT);
 
-		FkInt32U j;
-		CBlob* currBlob;
+        FkInt32U j;
+        CBlob* currBlob;
         for (j= 0;j<(this->m_currFixedCentroids.size())-1;j++)
         {
             currBlob = this->m_fixedListOfBlobs.GetBlob(j);
-			m_OutputText<<currBlob->getIDNumber()<<","<<(int)m_currFixedCentroids[j].x<<","<<(int)m_currFixedCentroids[j].y<<",";
-		}
-		currBlob = this->m_fixedListOfBlobs.GetBlob((this->m_currFixedCentroids.size())-1);
-		m_OutputText<<currBlob->getIDNumber()<<","<<(int)m_currFixedCentroids[j].x<<","<<(int)m_currFixedCentroids[j].y<<std::endl;
+            m_OutputText<<currBlob->getIDNumber()<<","<<currBlob->getSex()<<","<<(int)m_currFixedCentroids[j].x<<","<<(int)m_currFixedCentroids[j].y<<",";
+        }
+        currBlob = this->m_fixedListOfBlobs.GetBlob((this->m_currFixedCentroids.size())-1);
+        m_OutputText<<currBlob->getIDNumber()<<","<<currBlob->getSex()<<","<<(int)m_currFixedCentroids[j].x<<","<<(int)m_currFixedCentroids[j].y<<std::endl;
     return (FK_OK);
 
 }

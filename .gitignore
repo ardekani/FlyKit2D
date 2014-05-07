@@ -1,0 +1,14 @@
+*.ncb
+*.txt
+*.obj
+*.manifest
+*.htm
+*.exe
+*.res
+*.ilk
+*.pdb
+*.dep
+*.idb
+*.suo
+*.suo
+vs2005/flykit2D/flykit2D.suo
